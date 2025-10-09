@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Card, Row, Col, Container, Badge } from "react-bootstrap";
 import { RootState } from "../redux/store";
 import { fetchProductsRequest } from "../redux/products/ProductAction";
+import { FileEarmarkArrowDownFill } from "react-bootstrap-icons";
+import {
+  generateSingleProductPDF,
+  generateAllProductsPDF,
+} from "../utils/pdfGenerator";
+import {
+  generateSingleProductExcel,
+  generateAllProductsExcel,
+} from "../utils/excelGenerator";
 
 interface ProductType {
   id: number;
@@ -73,6 +82,22 @@ function Product() {
     { key: "electronics", label: "Electronics" },
   ];
 
+  const handleDownloadSinglePdfFile = (product: ProductType) => {
+    generateSingleProductPDF(product);
+  };
+
+  const handleDownloadAllPdfFile = () => {
+    generateAllProductsPDF(filteredProducts);
+  };
+
+  const handleDownloadSingleExcelSheet = async (product: ProductType) => {
+    await generateSingleProductExcel(product);
+  };
+
+  const handleDownloadAllExcelSheet = async () => {
+    await generateAllProductsExcel(products);
+  };
+
   return (
     <>
       {/* Category Filter Buttons */}
@@ -89,6 +114,20 @@ function Product() {
             {category.label}
           </Button>
         ))}
+        <Button
+          variant="outline-primary"
+          onClick={() => handleDownloadAllPdfFile()}
+        >
+          <FileEarmarkArrowDownFill className="me-2 " />
+          All Products PDF
+        </Button>
+        <Button
+          variant="outline-primary"
+          onClick={() => handleDownloadAllExcelSheet()}
+        >
+          <FileEarmarkArrowDownFill className="me-2 " />
+          All Products Excel
+        </Button>
       </Container>
 
       {/* Products Grid */}
@@ -115,6 +154,7 @@ function Product() {
                         <Badge bg="secondary" className="mb-2">
                           {product.category}
                         </Badge>
+
                         <Card.Title
                           className="h6"
                           style={{ fontSize: "0.95rem" }}
@@ -141,6 +181,28 @@ function Product() {
                           </h5>
                           <Button variant="primary" size="sm">
                             Add to Cart
+                          </Button>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            style={{ fontSize: "1rem" }}
+                            onClick={() =>
+                              handleDownloadSingleExcelSheet(product)
+                            }
+                          >
+                            <FileEarmarkArrowDownFill className="me-1 " />
+                            Excel
+                          </Button>
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            style={{ fontSize: "1rem" }}
+                            onClick={() => handleDownloadSinglePdfFile(product)}
+                          >
+                            <FileEarmarkArrowDownFill className="me-1 " />
+                            PDF
                           </Button>
                         </div>
                       </div>
