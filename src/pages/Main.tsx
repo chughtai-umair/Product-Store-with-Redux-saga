@@ -1,4 +1,4 @@
-import Product from "../components/Product";
+import { Product } from "../components/Product";
 import { Container } from "react-bootstrap";
 
 export function Main() {

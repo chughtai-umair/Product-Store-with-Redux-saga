@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Button, Card, Row, Col, Container, Badge } from "react-bootstrap";
 import { RootState } from "../redux/store";
 import { fetchProductsRequest } from "../redux/products/ProductAction";
-import { FileEarmarkArrowDownFill } from "react-bootstrap-icons";
+import { FileEarmarkArrowDownFill, Search } from "react-bootstrap-icons";
 import {
   generateSingleProductPDF,
   generateAllProductsPDF,
@@ -26,13 +26,13 @@ interface ProductType {
   };
 }
 
-function Product() {
+export function Product() {
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector(
     (state: RootState) => state.products
   );
-
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Fetch products on mount
   useEffect(() => {
@@ -65,13 +65,15 @@ function Product() {
     );
   }
 
-  // Filtered products by category
-  const filteredProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter(
-          (product: ProductType) => product.category === selectedCategory
-        );
+  // Combined filter: Category + Search
+  const filteredProducts = products.filter((product: ProductType) => {
+    const matchesCategory =
+      selectedCategory === "all" || product.category === selectedCategory;
+    const matchesSearch = product.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Categories
   const categories = [
@@ -95,11 +97,32 @@ function Product() {
   };
 
   const handleDownloadAllExcelSheet = async () => {
-    await generateAllProductsExcel(products);
+    await generateAllProductsExcel(filteredProducts);
   };
 
   return (
     <>
+      {/* Search Bar with Icon */}
+      <Container className="text-center mb-4">
+        <div
+          className="position-relative d-inline-block"
+          style={{ width: "50%" }}
+        >
+          <Search
+            className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
+            size={20}
+          />
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="rounded-3 w-100 py-2 px-5 border border-secondary"
+            style={{ paddingLeft: "40px" }}
+          />
+        </div>
+      </Container>
+
       {/* Category Filter Buttons */}
       <Container className="text-center mb-4">
         {categories.map((category) => (
@@ -116,19 +139,28 @@ function Product() {
         ))}
         <Button
           variant="outline-primary"
+          className="m-2"
           onClick={() => handleDownloadAllPdfFile()}
         >
-          <FileEarmarkArrowDownFill className="me-2 " />
+          <FileEarmarkArrowDownFill className="me-2" />
           All Products PDF
         </Button>
         <Button
           variant="outline-primary"
+          className="m-2"
           onClick={() => handleDownloadAllExcelSheet()}
         >
-          <FileEarmarkArrowDownFill className="me-2 " />
+          <FileEarmarkArrowDownFill className="me-2" />
           All Products Excel
         </Button>
       </Container>
+
+      {/* No Results Message */}
+      {filteredProducts.length === 0 && (
+        <Container className="text-center my-5">
+          <p className="text-muted">No products found matching your search.</p>
+        </Container>
+      )}
 
       {/* Products Grid */}
       <Container className="my-4">
@@ -192,7 +224,7 @@ function Product() {
                               handleDownloadSingleExcelSheet(product)
                             }
                           >
-                            <FileEarmarkArrowDownFill className="me-1 " />
+                            <FileEarmarkArrowDownFill className="me-1" />
                             Excel
                           </Button>
                           <Button
@@ -201,7 +233,7 @@ function Product() {
                             style={{ fontSize: "1rem" }}
                             onClick={() => handleDownloadSinglePdfFile(product)}
                           >
-                            <FileEarmarkArrowDownFill className="me-1 " />
+                            <FileEarmarkArrowDownFill className="me-1" />
                             PDF
                           </Button>
                         </div>
@@ -224,5 +256,3 @@ function Product() {
     </>
   );
 }
-
-export default Product;
