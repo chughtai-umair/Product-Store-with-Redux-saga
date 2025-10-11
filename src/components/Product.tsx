@@ -3,7 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Button, Card, Row, Col, Container, Badge } from "react-bootstrap";
 import { RootState } from "../redux/store";
 import { fetchProductsRequest } from "../redux/products/ProductAction";
-import { FileEarmarkArrowDownFill, Search } from "react-bootstrap-icons";
+import {
+  FileEarmarkArrowDownFill,
+  PlusLg,
+  Search,
+} from "react-bootstrap-icons";
 import {
   generateSingleProductPDF,
   generateAllProductsPDF,
@@ -12,6 +16,7 @@ import {
   generateSingleProductExcel,
   generateAllProductsExcel,
 } from "../utils/excelGenerator";
+import { useNavigate } from "react-router-dom";
 
 interface ProductType {
   id: number;
@@ -33,6 +38,7 @@ export function Product() {
   const { products, loading, error } = useSelector(
     (state: RootState) => state.products
   );
+  const navigate = useNavigate();
 
   // Fetch products on mount
   useEffect(() => {
@@ -117,10 +123,28 @@ export function Product() {
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="rounded-3 w-100 py-2 px-5 border border-secondary"
+            className="rounded-3 w-100 py-2 pl-5 border border-secondary"
             style={{ paddingLeft: "40px" }}
           />
+
+          <button
+            type="button"
+            className="btn position-absolute top-50 py-2 end-0 translate-middle-y border-start outline-secondary "
+            style={{ background: "none" }}
+            onClick={() => setSearchTerm("")}
+          >
+            Clear
+          </button>
         </div>
+        <Button
+          type="button"
+          variant="outline-primary"
+          className="m-2"
+          onClick={() => navigate("/add-product")}
+        >
+          <PlusLg size={20} />
+          Add Product
+        </Button>
       </Container>
 
       {/* Category Filter Buttons */}

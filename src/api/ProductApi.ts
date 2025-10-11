@@ -1,8 +1,9 @@
 import { Products } from "../types";
+export const url = "https://fakestoreapi.com/products";
 
 export async function fetchProductsApi(): Promise<Products[]> {
   try {
-    const res = await fetch("https://fakestoreapi.com/products", {
+    const res = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

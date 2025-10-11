@@ -6,8 +6,8 @@ export default function MainLayout() {
   return (
     <div>
       <Navbar />
-      <Outlet />
       <Main />
+      <Outlet />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { Product } from "../components/Product";
 import { Container } from "react-bootstrap";
+import { AddProduct } from "./product/AddProduct";
+import { ListProduct } from "./product/ListProduct";
 
 export function Main() {
   return (

@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import Login from "./components/login";
 import MainLayout from "./layouts/MainLayout";
+import { AddProduct } from "./pages/product/AddProduct";
 
 const App: React.FC = () => {
   const router = createBrowserRouter(
@@ -16,6 +17,7 @@ const App: React.FC = () => {
         {/* <Route path="login" element={<Login />} /> */}
         {/* Admin panel */}
         <Route index element={<MainLayout />} />
+        <Route path="add-product" element={<AddProduct />} />
       </Route>
     )
   );
