@@ -5,9 +5,11 @@ import {
   createRoutesFromElements,
   RouterProvider,
 } from "react-router-dom";
-import Login from "./components/login";
+// import Login from "./components/login";
 import MainLayout from "./layouts/MainLayout";
 import { AddProduct } from "./pages/product/AddProduct";
+import { Practice } from "./pages/practice grid/practice";
+import { ProductList } from "./pages/practice grid/ProductList";
 
 const App: React.FC = () => {
   const router = createBrowserRouter(
@@ -18,6 +20,8 @@ const App: React.FC = () => {
         {/* Admin panel */}
         <Route index element={<MainLayout />} />
         <Route path="add-product" element={<AddProduct />} />
+        <Route path="practice" element={<Practice />} />
+        <Route path="product-list" element={<ProductList />} />
       </Route>
     )
   );
