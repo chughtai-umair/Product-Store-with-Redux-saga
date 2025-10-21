@@ -120,11 +120,9 @@ export function AddProduct() {
     const allItems = savedGrids.flat();
     const itemToEdit = allItems[index];
 
-    // Remove item and rebuild savedGrids
     const newAllItems = allItems.filter((_, i) => i !== index);
 
     setSavedGrids(newAllItems.length > 0 ? [newAllItems] : []);
-    // Add back to rows for editing
     setRows([...rows, itemToEdit]);
   };
 

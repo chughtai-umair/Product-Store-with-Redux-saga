@@ -1,5 +1,5 @@
 // ProductList.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PencilSquare, Trash3, Plus } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -13,25 +13,63 @@ interface ProductRow {
 }
 
 export function ProductList() {
-  const [savedGrids, setSavedGrids] = useState<ProductRow[]>([]);
+  const [groupedData, setGroupedData] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedData = localStorage.getItem("formData");
-    if (storedData) {
-      setSavedGrids(JSON.parse(storedData));
-    }
+    loadGroupedData();
   }, []);
 
-  const handleEdit = (index: number) => {
-    // For now, just navigate back to form - you can enhance this
-    navigate("/practice");
+  const loadGroupedData = () => {
+    const allRows = JSON.parse(localStorage.getItem("editRows") || "[]");
+    const grouped = getGroupedData(allRows);
+    setGroupedData(grouped);
   };
 
-  const handleDelete = (index: number) => {
+  const handleEdit = (groupId: string) => {
+    const allRows = JSON.parse(localStorage.getItem("editRows") || "[]");
+    const groupRows = allRows.filter((row: any) => row.groupId === groupId);
+
+    if (groupRows.length === 0) return;
+
+    console.log("✅ Loading for edit:", groupRows);
+    localStorage.setItem("editItem", JSON.stringify(groupRows));
+    localStorage.setItem("editMode", "true");
+    localStorage.setItem("editGroupId", groupId);
+
+    navigate("/practicelayout/practice");
+  };
+
+  const getGroupedData = (allRows: any[]) => {
+    const grouped = allRows.reduce((acc: any, row: any) => {
+      if (!row.groupId) return acc;
+
+      if (!acc[row.groupId]) {
+        acc[row.groupId] = {
+          groupId: row.groupId,
+          rowCount: 0,
+          totalQty: 0,
+          totalAmount: 0,
+          rows: [],
+        };
+      }
+
+      acc[row.groupId].rowCount++;
+      acc[row.groupId].totalQty += parseFloat(row.Qty) || 0;
+      acc[row.groupId].totalAmount +=
+        (parseFloat(row.Qty) || 0) * (parseFloat(row.Price) || 0);
+      acc[row.groupId].rows.push(row);
+
+      return acc;
+    }, {});
+
+    return Object.values(grouped);
+  };
+
+  const handleDelete = (groupId: string) => {
     Swal.fire({
       title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      text: "You won't be able to revert this group!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -39,11 +77,15 @@ export function ProductList() {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        const updated = savedGrids.filter((_, i) => i !== index);
-        setSavedGrids(updated);
-        localStorage.setItem("formData", JSON.stringify(updated));
+        const allRows = JSON.parse(localStorage.getItem("editRows") || "[]");
+        const updatedRows = allRows.filter(
+          (row: any) => row.groupId !== groupId
+        );
 
-        Swal.fire("Deleted!", "Your record has been deleted.", "success");
+        localStorage.setItem("editRows", JSON.stringify(updatedRows));
+        loadGroupedData();
+
+        Swal.fire("Deleted!", "Your group has been deleted.", "success");
       }
     });
   };
@@ -51,51 +93,66 @@ export function ProductList() {
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Product List ({savedGrids.length} items)</h2>
+        <h2>Product Groups ({groupedData.length} groups)</h2>
         <button
-          onClick={() => navigate("/practice")}
           className="btn btn-primary"
+          onClick={() => navigate("/practicelayout/practice")}
         >
           <Plus className="me-2" />
-          Add New Product
+          Add New Group
         </button>
-      </div>
-
-      {savedGrids.length > 0 ? (
+      </div>{" "}
+      {groupedData.length > 0 ? (
         <div className="table-responsive">
           <table className="table table-bordered table-hover">
             <thead className="table-dark">
               <tr>
                 <th>#</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Stock Value</th>
+                <th>Group ID</th>
+                <th>Total Items</th>
+                <th>Total Qty</th>
+                <th>Total Amount</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {savedGrids.map((row, index) => (
-                <tr key={index}>
+              {groupedData.map((group: any, index: number) => (
+                <tr key={group.groupId}>
                   <td>{index + 1}</td>
-                  <td>{row.Name}</td>
-                  <td>{row.Category}</td>
-                  <td>{row.Qty}</td>
-                  <td>${row.Price}</td>
-                  <td>${row.Stock_Value}</td>
+                  <td>
+                    <strong>Group {index + 1}</strong>
+                    <br />
+                    <small className="text-muted">{group.groupId}</small>
+                  </td>
+                  <td>
+                    <span className="badge bg-info">
+                      {group.rowCount} items
+                    </span>
+                  </td>
+                  <td>
+                    <span className="fw-bold text-primary">
+                      {group.totalQty}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="fw-bold text-success">
+                      ${group.totalAmount.toFixed(2)}
+                    </span>
+                  </td>
                   <td>
                     <PencilSquare
                       className="text-primary mx-2"
                       role="button"
-                      title="Edit"
-                      onClick={() => handleEdit(index)}
+                      title="Edit Group"
+                      size={18}
+                      onClick={() => handleEdit(group.groupId)}
                     />
                     <Trash3
                       className="text-danger"
                       role="button"
-                      title="Delete"
-                      onClick={() => handleDelete(index)}
+                      title="Delete Group"
+                      size={18}
+                      onClick={() => handleDelete(group.groupId)}
                     />
                   </td>
                 </tr>
@@ -105,7 +162,7 @@ export function ProductList() {
         </div>
       ) : (
         <div className="text-center py-5">
-          <h4 className="text-muted">No products found</h4>
+          <h4 className="text-muted">No product groups found</h4>
           <p>Click "Add New Product" to get started</p>
         </div>
       )}
