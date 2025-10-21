@@ -2,21 +2,20 @@ import { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import Swal from "sweetalert2";
-import { Plus, PlusSquare, X } from "react-bootstrap-icons";
+import { Plus, X } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 
-interface ProductRow {
-  Name: string;
-  Category: string;
-  Qty: number;
-  Price: number;
-  Stock_Value: number;
-}
-
-interface FormValues {
-  rows: ProductRow[];
-}
+// Import utilities and types
+import { ProductRow, FormValues } from "../../types";
+import {
+  loadEditData,
+  isEditMode,
+} from "../../utils/practiceGrid/localStorageUtils";
+import { calculateTotals } from "../../utils/practiceGrid/calculationUtils";
+import {
+  handleFormSubmit,
+  addNewRow,
+} from "../../utils/practiceGrid/formHandlers";
 
 const schema = yup.object().shape({
   rows: yup
@@ -58,7 +57,6 @@ export function Practice() {
       rows: [{ Name: "", Category: "", Qty: 0, Price: 0, Stock_Value: 0 }],
     },
   });
-
   const saveGroupToLocalStorage = (formData: any) => {
     try {
       const groupId = `GRP-${Date.now()}`;
@@ -91,106 +89,32 @@ export function Practice() {
     name: "rows",
   });
 
-  const formValues = watch("rows");
+  const formValues = watch("rows"); // Load edit data on component mount
   useEffect(() => {
-    const editMode = localStorage.getItem("editMode");
-    const editItem = localStorage.getItem("editItem");
-
-    if (editMode === "true" && editItem) {
-      const editData = JSON.parse(editItem);
+    const editData = loadEditData();
+    if (editData) {
       console.log("✅ Loading edit data:", editData);
-
-      // editData is an array of rows from the same group
       reset({ rows: editData });
     }
   }, [reset]);
+  // Calculate totals using utility function
+  const { totalQty, totalAmount } = calculateTotals(formValues);
 
-  const calculateTotals = () => {
-    const totalQty =
-      formValues?.reduce((sum, row) => sum + (row?.Qty || 0), 0) || 0;
-    const totalAmount =
-      formValues?.reduce(
-        (sum, row) => sum + (row?.Qty || 0) * (row?.Price || 0),
-        0
-      ) || 0;
-    return { totalQty, totalAmount };
-  };
-
-  const { totalQty, totalAmount } = calculateTotals();
-
+  // Add new row function
   const addRow = () => {
-    append({ Name: "", Category: "", Qty: 0, Price: 0, Stock_Value: 0 });
+    addNewRow(append);
   };
+
+  // Submit handler using utility function
   const onSubmit = (data: FormValues) => {
-    const invalidStock = data.rows.find((r) => r.Qty > r.Stock_Value);
-    if (invalidStock) {
-      Swal.fire({
-        icon: "error",
-        title: "Invalid Quantity",
-        text: `Quantity cannot exceed stock value for "${invalidStock.Name}".`,
-      });
-      return;
-    }
-
-    const editMode = localStorage.getItem("editMode");
-    const editGroupId = localStorage.getItem("editGroupId");
-
-    if (editMode === "true" && editGroupId) {
-      // Edit mode: Update existing group
-      const allRows = JSON.parse(localStorage.getItem("editRows") || "[]");
-
-      // Remove old rows of this group
-      const otherRows = allRows.filter(
-        (row: any) => row.groupId !== editGroupId
-      );
-
-      // Add updated rows with same groupId
-      const updatedRows = data.rows.map((row: any) => ({
-        ...row,
-        groupId: editGroupId,
-        Name: row.Name || "",
-        Category: row.Category || "",
-        Qty: parseFloat(row.Qty) || 0,
-        Price: parseFloat(row.Price) || 0,
-        Stock_Value: parseFloat(row.Stock_Value) || 0,
-      }));
-
-      const finalData = [...otherRows, ...updatedRows];
-      localStorage.setItem("editRows", JSON.stringify(finalData));
-
-      // Clear edit mode
-      localStorage.removeItem("editMode");
-      localStorage.removeItem("editItem");
-      localStorage.removeItem("editGroupId");
-
-      console.log("✅ Group Updated:", editGroupId, updatedRows);
-    } else {
-      // Add mode: Create new group
-      const result = saveGroupToLocalStorage(data);
-      if (!result.success) {
-        Swal.fire({
-          icon: "error",
-          title: "Save Failed",
-          text: "Failed to save the group. Please try again.",
-        });
-        return;
-      }
-    }
-
-    Swal.fire({
-      icon: "success",
-      title: editMode === "true" ? "Group updated!" : "Group added!",
-      timer: 1500,
-      showConfirmButton: false,
-    }).then(() => navigate("/practicelayout/practice-list"));
+    handleFormSubmit(data, navigate);
   };
 
   return (
     <div className="container mt-5">
+      {" "}
       <h2 className="text-center mb-4">
-        {localStorage.getItem("editMode") === "true"
-          ? "Edit Product"
-          : "Add Product"}
+        {isEditMode() ? "Edit Product" : "Add Product"}
       </h2>
       <div className="d-flex gap-1 border-1  justify-content-end  align-items-center mb-4 ">
         <button className="btn btn-success" onClick={addRow}>
@@ -198,7 +122,6 @@ export function Practice() {
           Add Row
         </button>
       </div>
-
       <form onSubmit={handleSubmit(onSubmit as any)}>
         <table className="table table-bordered">
           <thead className="table-dark">
@@ -348,8 +271,9 @@ export function Practice() {
         </table>
 
         <div>
+          {" "}
           <button type="submit" className="btn btn-success btn-sm">
-            {localStorage.getItem("editMode") === "true" ? "Update" : "Submit"}
+            {isEditMode() ? "Update" : "Submit"}
           </button>
         </div>
       </form>

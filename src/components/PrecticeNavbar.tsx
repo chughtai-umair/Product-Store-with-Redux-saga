@@ -3,6 +3,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Offcanvas from "react-bootstrap/Offcanvas";
+import { Link } from "react-router-dom";
 
 function PrecticeNavbar() {
   return (
@@ -27,10 +28,19 @@ function PrecticeNavbar() {
             <Offcanvas.Body>
               <Nav className="justify-content-center flex-grow-1 pe-3">
                 <Nav.Link href="#action1">Home</Nav.Link>
-                <Nav.Link href="/practicelayout/practice">Practice</Nav.Link>
-                <Nav.Link href="/practicelayout/practice-list">
+
+                <Link
+                  className="nav-link  hover-bg-light"
+                  to="/practicelayout/practice"
+                >
+                  Practice
+                </Link>
+                <Link
+                  className="nav-link   hover-bg-light"
+                  to="/practicelayout/practice-list"
+                >
                   Practice List
-                </Nav.Link>
+                </Link>
               </Nav>
             </Offcanvas.Body>
           </Navbar.Offcanvas>

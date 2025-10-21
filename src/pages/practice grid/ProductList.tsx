@@ -1,8 +1,19 @@
 // ProductList.tsx
 import { useEffect, useState } from "react";
-import { PencilSquare, Trash3, Plus } from "react-bootstrap-icons";
+import { PencilSquare, Trash3, FileEarmarkPdf } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+
+// Import utilities
+import {
+  getGroupedData,
+  deleteGroupFromLocalStorage,
+} from "../../utils/practiceGrid/localStorageUtils";
+import {
+  generateGroupPDF,
+  generateAllGroupsPDF,
+  generateGroupsSummaryPDF,
+} from "../../utils/practiceGrid/pdfUtils";
 
 interface ProductRow {
   Name: string;
@@ -21,8 +32,7 @@ export function ProductList() {
   }, []);
 
   const loadGroupedData = () => {
-    const allRows = JSON.parse(localStorage.getItem("editRows") || "[]");
-    const grouped = getGroupedData(allRows);
+    const grouped = getGroupedData();
     setGroupedData(grouped);
   };
 
@@ -40,32 +50,6 @@ export function ProductList() {
     navigate("/practicelayout/practice");
   };
 
-  const getGroupedData = (allRows: any[]) => {
-    const grouped = allRows.reduce((acc: any, row: any) => {
-      if (!row.groupId) return acc;
-
-      if (!acc[row.groupId]) {
-        acc[row.groupId] = {
-          groupId: row.groupId,
-          rowCount: 0,
-          totalQty: 0,
-          totalAmount: 0,
-          rows: [],
-        };
-      }
-
-      acc[row.groupId].rowCount++;
-      acc[row.groupId].totalQty += parseFloat(row.Qty) || 0;
-      acc[row.groupId].totalAmount +=
-        (parseFloat(row.Qty) || 0) * (parseFloat(row.Price) || 0);
-      acc[row.groupId].rows.push(row);
-
-      return acc;
-    }, {});
-
-    return Object.values(grouped);
-  };
-
   const handleDelete = (groupId: string) => {
     Swal.fire({
       title: "Are you sure?",
@@ -77,31 +61,141 @@ export function ProductList() {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        const allRows = JSON.parse(localStorage.getItem("editRows") || "[]");
-        const updatedRows = allRows.filter(
-          (row: any) => row.groupId !== groupId
-        );
+        const result = deleteGroupFromLocalStorage(groupId);
 
-        localStorage.setItem("editRows", JSON.stringify(updatedRows));
-        loadGroupedData();
-
-        Swal.fire("Deleted!", "Your group has been deleted.", "success");
+        if (result.success) {
+          loadGroupedData();
+          Swal.fire("Deleted!", "Your group has been deleted.", "success");
+        } else {
+          Swal.fire("Error!", "Failed to delete the group.", "error");
+        }
       }
     });
   };
+
+  // PDF Functions
+  const handleGeneratePDF = (group: any, index: number) => {
+    const result = generateGroupPDF(group, index);
+    if (result.success) {
+      Swal.fire({
+        icon: "success",
+        title: "PDF Generated!",
+        text: "Group PDF has been downloaded.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "PDF Generation Failed",
+        text: "Failed to generate PDF. Please try again.",
+      });
+    }
+  };
+
+  const handleGenerateAllPDF = () => {
+    if (groupedData.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Data",
+        text: "No groups available to generate PDF.",
+      });
+      return;
+    }
+
+    const result = generateAllGroupsPDF(groupedData);
+    if (result.success) {
+      Swal.fire({
+        icon: "success",
+        title: "PDF Generated!",
+        text: "All groups PDF has been downloaded.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "PDF Generation Failed",
+        text: "Failed to generate PDF. Please try again.",
+      });
+    }
+  };
+  const handleGenerateSummaryPDF = () => {
+    if (groupedData.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Data",
+        text: "No groups available to generate PDF.",
+      });
+      return;
+    }
+
+    const result = generateGroupsSummaryPDF(groupedData);
+    if (result.success) {
+      Swal.fire({
+        icon: "success",
+        title: "PDF Generated!",
+        text: "Groups summary PDF has been downloaded.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "PDF Generation Failed",
+        text: "Failed to generate PDF. Please try again.",
+      });
+    }
+  };
+
+  // Calculate grand totals
+  const calculateGrandTotals = () => {
+    const grandTotalItems = groupedData.reduce(
+      (sum, group) => sum + group.rowCount,
+      0
+    );
+    const grandTotalQty = groupedData.reduce(
+      (sum, group) => sum + group.totalQty,
+      0
+    );
+    const grandTotalAmount = groupedData.reduce(
+      (sum, group) => sum + group.totalAmount,
+      0
+    );
+
+    return {
+      totalItems: grandTotalItems,
+      totalQty: grandTotalQty,
+      totalAmount: grandTotalAmount,
+    };
+  };
+
+  const { totalItems, totalQty, totalAmount } = calculateGrandTotals();
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Product Groups ({groupedData.length} groups)</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/practicelayout/practice")}
-        >
-          <Plus className="me-2" />
-          Add New Group
-        </button>
-      </div>{" "}
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-danger btn-sm"
+            onClick={handleGenerateAllPDF}
+            disabled={groupedData.length === 0}
+          >
+            <FileEarmarkPdf className="me-1" />
+            All Groups PDF
+          </button>
+          <button
+            className="btn btn-outline-info btn-sm"
+            onClick={handleGenerateSummaryPDF}
+            disabled={groupedData.length === 0}
+          >
+            <FileEarmarkPdf className="me-1" />
+            Summary PDF
+          </button>
+        </div>
+      </div>
+
       {groupedData.length > 0 ? (
         <div className="table-responsive">
           <table className="table table-bordered table-hover">
@@ -113,6 +207,7 @@ export function ProductList() {
                 <th>Total Qty</th>
                 <th>Total Amount</th>
                 <th>Actions</th>
+                <th>PDF</th>
               </tr>
             </thead>
             <tbody>
@@ -125,8 +220,8 @@ export function ProductList() {
                     <small className="text-muted">{group.groupId}</small>
                   </td>
                   <td>
-                    <span className="badge bg-info">
-                      {group.rowCount} items
+                    <span className="fw-bold text-primary">
+                      {group.rowCount}{" "}
                     </span>
                   </td>
                   <td>
@@ -155,15 +250,37 @@ export function ProductList() {
                       onClick={() => handleDelete(group.groupId)}
                     />
                   </td>
+                  <td>
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleGeneratePDF(group, index)}
+                      title="Generate PDF for this group"
+                    >
+                      <FileEarmarkPdf className="me-1" />
+                      PDF
+                    </button>
+                  </td>
                 </tr>
               ))}
-            </tbody>
+            </tbody>{" "}
+            <tfoot className="table-success">
+              <tr>
+                <td colSpan={2} className="text-end fw-bold">
+                  GRAND TOTALS:
+                </td>
+                <td className="fw-bold text-primary">{totalItems} </td>
+                <td className="fw-bold text-primary">{totalQty}</td>
+                <td colSpan={3} className="fw-bold text-success">
+                  ${totalAmount.toFixed(2)}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       ) : (
         <div className="text-center py-5">
           <h4 className="text-muted">No product groups found</h4>
-          <p>Click "Add New Product" to get started</p>
+          <p>Click "Add New Group" to get started</p>
         </div>
       )}
     </div>
