@@ -1,15 +1,13 @@
-import { ProductRow } from "../../types";
+import { ProductRow } from './localStorageUtils';
 
 // Calculate totals for form values
 export const calculateTotals = (formValues: ProductRow[] | undefined) => {
-  const totalQty =
-    formValues?.reduce((sum, row) => sum + (row?.Qty || 0), 0) || 0;
-  const totalAmount =
-    formValues?.reduce(
-      (sum, row) => sum + (row?.Qty || 0) * (row?.Price || 0),
-      0
-    ) || 0;
-
+  const totalQty = formValues?.reduce((sum, row) => sum + (row?.Qty || 0), 0) || 0;
+  const totalAmount = formValues?.reduce(
+    (sum, row) => sum + (row?.Qty || 0) * (row?.Price || 0),
+    0
+  ) || 0;
+  
   return { totalQty, totalAmount };
 };
 

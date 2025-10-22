@@ -19,12 +19,10 @@ export type Products = {
     count: number;
   };
 };
-
 export type CartItem = {
   product: Products;
   quantity: number;
 };
-
 export type CartState = {
   items: CartItem[];
 };
@@ -38,16 +36,4 @@ export type ProductRow = {
   groupId?: string;
   batch_id?: string;
   length?: number;
-};
-
-export type FormValues = {
-  rows: ProductRow[];
-};
-
-export type GroupData = {
-  groupId: string;
-  rowCount: number;
-  totalQty: number;
-  totalAmount: number;
-  rows: ProductRow[];
 };

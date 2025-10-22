@@ -1,18 +1,21 @@
 import Swal from "sweetalert2";
 import { NavigateFunction } from "react-router-dom";
-import { FormValues } from "../../types";
-import {
-  saveGroupToLocalStorage,
-  updateGroupInLocalStorage,
-  clearEditMode,
-  isEditMode,
-  getEditGroupId,
-} from "./localStorageUtils";
-import { validateStock } from "./calculationUtils";
+import { 
+  saveGroupToLocalStorage, 
+  updateGroupInLocalStorage, 
+  clearEditMode, 
+  isEditMode, 
+  getEditGroupId 
+} from './localStorageUtils';
+import { validateStock } from './calculationUtils';
+
+export interface FormValues {
+  rows: any[];
+}
 
 // Handle form submission
 export const handleFormSubmit = async (
-  data: FormValues,
+  data: FormValues, 
   navigate: NavigateFunction
 ) => {
   // Validate stock
@@ -55,6 +58,7 @@ export const handleFormSubmit = async (
 
     // Navigate to list page
     navigate("/practicelayout/practice-list");
+    
   } catch (error) {
     Swal.fire({
       icon: "error",
@@ -67,7 +71,7 @@ export const handleFormSubmit = async (
 // Handle form reset
 export const handleFormReset = (reset: any) => {
   reset({
-    rows: [{ Name: "", Category: "", Qty: 0, Price: 0, Stock_Value: 0 }],
+    rows: [{ Name: "", Category: "", Qty: 0, Price: 0, Stock_Value: 0 }]
   });
 };
 

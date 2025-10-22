@@ -7,15 +7,21 @@ import { useNavigate } from "react-router-dom";
 
 // Import utilities and types
 import { ProductRow, FormValues } from "../../types";
-import {
-  loadEditData,
-  isEditMode,
-} from "../../utils/practiceGrid/localStorageUtils";
+import { loadEditData, isEditMode } from "../../utils/practiceGrid/localStorageUtils";
 import { calculateTotals } from "../../utils/practiceGrid/calculationUtils";
-import {
-  handleFormSubmit,
-  addNewRow,
-} from "../../utils/practiceGrid/formHandlers";
+import { handleFormSubmit, addNewRow } from "../../utils/practiceGrid/formHandlers";
+
+interface ProductRow {
+  Name: string;
+  Category: string;
+  Qty: number;
+  Price: number;
+  Stock_Value: number;
+}
+
+interface FormValues {
+  rows: ProductRow[];
+}
 
 const schema = yup.object().shape({
   rows: yup
@@ -89,7 +95,7 @@ export function Practice() {
     name: "rows",
   });
 
-  const formValues = watch("rows"); // Load edit data on component mount
+  const formValues = watch("rows");  // Load edit data on component mount
   useEffect(() => {
     const editData = loadEditData();
     if (editData) {
@@ -111,9 +117,7 @@ export function Practice() {
   };
 
   return (
-    <div className="container mt-5">
-      {" "}
-      <h2 className="text-center mb-4">
+    <div className="container mt-5">      <h2 className="text-center mb-4">
         {isEditMode() ? "Edit Product" : "Add Product"}
       </h2>
       <div className="d-flex gap-1 border-1  justify-content-end  align-items-center mb-4 ">
@@ -122,6 +126,7 @@ export function Practice() {
           Add Row
         </button>
       </div>
+
       <form onSubmit={handleSubmit(onSubmit as any)}>
         <table className="table table-bordered">
           <thead className="table-dark">
@@ -270,9 +275,7 @@ export function Practice() {
           </tfoot>
         </table>
 
-        <div>
-          {" "}
-          <button type="submit" className="btn btn-success btn-sm">
+        <div>          <button type="submit" className="btn btn-success btn-sm">
             {isEditMode() ? "Update" : "Submit"}
           </button>
         </div>

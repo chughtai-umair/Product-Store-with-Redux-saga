@@ -1,15 +1,4 @@
-// import { ProductRow } from "../../types";
-
-type ProductRow = {
-  Name: string;
-  Category: string;
-  Qty: number;
-  Price: number;
-  Stock_Value: number;
-  groupId?: string;
-  batch_id?: string;
-  length?: number;
-};
+import { ProductRow } from "../../types";
 
 // Get all rows from localStorage
 export const getAllRows = (): ProductRow[] => {

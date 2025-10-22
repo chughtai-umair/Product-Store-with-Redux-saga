@@ -1,19 +1,12 @@
 // ProductList.tsx
 import { useEffect, useState } from "react";
-import { PencilSquare, Trash3, FileEarmarkPdf } from "react-bootstrap-icons";
+import { PencilSquare, Trash3, Plus, FileEarmarkPdf } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 // Import utilities
-import {
-  getGroupedData,
-  deleteGroupFromLocalStorage,
-} from "../../utils/practiceGrid/localStorageUtils";
-import {
-  generateGroupPDF,
-  generateAllGroupsPDF,
-  generateGroupsSummaryPDF,
-} from "../../utils/practiceGrid/pdfUtils";
+import { getGroupedData, deleteGroupFromLocalStorage } from "../../utils/practiceGrid/localStorageUtils";
+import { generateGroupPDF, generateAllGroupsPDF, generateGroupsSummaryPDF } from "../../utils/practiceGrid/pdfUtils";
 
 interface ProductRow {
   Name: string;
@@ -62,9 +55,9 @@ export function ProductList() {
     }).then((result) => {
       if (result.isConfirmed) {
         const result = deleteGroupFromLocalStorage(groupId);
-
+        
         if (result.success) {
-          loadGroupedData();
+          loadGroupedData(); // Reload data after deletion
           Swal.fire("Deleted!", "Your group has been deleted.", "success");
         } else {
           Swal.fire("Error!", "Failed to delete the group.", "error");
@@ -120,6 +113,7 @@ export function ProductList() {
       });
     }
   };
+
   const handleGenerateSummaryPDF = () => {
     if (groupedData.length === 0) {
       Swal.fire({
@@ -148,36 +142,12 @@ export function ProductList() {
     }
   };
 
-  // Calculate grand totals
-  const calculateGrandTotals = () => {
-    const grandTotalItems = groupedData.reduce(
-      (sum, group) => sum + group.rowCount,
-      0
-    );
-    const grandTotalQty = groupedData.reduce(
-      (sum, group) => sum + group.totalQty,
-      0
-    );
-    const grandTotalAmount = groupedData.reduce(
-      (sum, group) => sum + group.totalAmount,
-      0
-    );
-
-    return {
-      totalItems: grandTotalItems,
-      totalQty: grandTotalQty,
-      totalAmount: grandTotalAmount,
-    };
-  };
-
-  const { totalItems, totalQty, totalAmount } = calculateGrandTotals();
-
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Product Groups ({groupedData.length} groups)</h2>
         <div className="d-flex gap-2">
-          <button
+          <button 
             className="btn btn-outline-danger btn-sm"
             onClick={handleGenerateAllPDF}
             disabled={groupedData.length === 0}
@@ -185,13 +155,20 @@ export function ProductList() {
             <FileEarmarkPdf className="me-1" />
             All Groups PDF
           </button>
-          <button
+          <button 
             className="btn btn-outline-info btn-sm"
             onClick={handleGenerateSummaryPDF}
             disabled={groupedData.length === 0}
           >
             <FileEarmarkPdf className="me-1" />
             Summary PDF
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => navigate("/practicelayout/practice")}
+          >
+            <Plus className="me-2" />
+            Add New Group
           </button>
         </div>
       </div>
@@ -220,19 +197,13 @@ export function ProductList() {
                     <small className="text-muted">{group.groupId}</small>
                   </td>
                   <td>
-                    <span className="fw-bold text-primary">
-                      {group.rowCount}{" "}
-                    </span>
+                    <span className="badge bg-info">{group.rowCount} items</span>
                   </td>
                   <td>
-                    <span className="fw-bold text-primary">
-                      {group.totalQty}
-                    </span>
+                    <span className="fw-bold text-primary">{group.totalQty}</span>
                   </td>
                   <td>
-                    <span className="fw-bold text-success">
-                      ${group.totalAmount.toFixed(2)}
-                    </span>
+                    <span className="fw-bold text-success">${group.totalAmount.toFixed(2)}</span>
                   </td>
                   <td>
                     <PencilSquare
@@ -262,19 +233,7 @@ export function ProductList() {
                   </td>
                 </tr>
               ))}
-            </tbody>{" "}
-            <tfoot className="table-success">
-              <tr>
-                <td colSpan={2} className="text-end fw-bold">
-                  GRAND TOTALS:
-                </td>
-                <td className="fw-bold text-primary">{totalItems} </td>
-                <td className="fw-bold text-primary">{totalQty}</td>
-                <td colSpan={3} className="fw-bold text-success">
-                  ${totalAmount.toFixed(2)}
-                </td>
-              </tr>
-            </tfoot>
+            </tbody>
           </table>
         </div>
       ) : (
